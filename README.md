@@ -10,18 +10,23 @@ Generates a thermal-infrared-looking image from a satellite (optical) image, the
 - **Text encoders:** CLIP-L and CLIP-G only, with no T5 (saves ~9.5 GB). Prompts are encoded first and the encoders freed before the denoiser loads.
 - **Precision:** bf16 on CPU, fp16 on CUDA. The VAE decodes in fp32.
 
-### Data layout
+### Sample data (included)
 
-`EO2IR_PAIRS` points to a folder with `metadata.csv` (columns `id, split, time_of_day, map_key, rgb_path, thermal_path, altitude_above_takeoff_m`). Each row is a satellite image (`rgb_path`, 8-bit RGB) pixel-aligned with a thermal frame (`thermal_path`, 16-bit grey), both 320 x 256. No data is included in this repo.
+`samples/` holds 20 pixel-aligned pairs, so the comparison runs right after cloning: 10 day and 10 night, mostly towns and cities plus some farmland, shrubland and trees.
+- `rgb/<id>.png`: an aerial image (USDA NAIP), 320 x 256, 8-bit RGB.
+- `thermal/<id>.png`: an airborne thermal frame of the same ground, 16-bit grey. Day frames come from NASA HyTES and night frames from NASA MASTER.
+- `metadata.csv`: id, time of day, scene type, sensor, source flight line, date, location, ground resolution (1.6-6.7 m/px) and altitude.
+
+Each pair is the thermal frame's own georeferenced grid, with the NAIP imagery warped onto it and centre-cropped to 5:4. To use your own pairs, point `EO2IR_PAIRS` at a folder with the same `metadata.csv` columns.
 
 ### Run
 
 ```
 pip install -r requirements.txt
 hf auth login                 # SD3.5 Medium is gated: accept its licence on its Hugging Face page first
-set EO2IR_PAIRS=D:\path\to\pairs        # PowerShell: $env:EO2IR_PAIRS = "D:\path\to\pairs"
-python -m eo2ir.generate --n 2 --out runs/zeroshot_2        # 1 day + 1 night pair from the test split
-python -m eo2ir.compare --out runs/zeroshot_2               # re-score an existing run
+python -m eo2ir.generate --n 2 --out runs/demo         # 1 day + 1 night pair
+python -m eo2ir.generate --n 20 --out runs/all         # all 20 sample pairs
+python -m eo2ir.compare --out runs/all                 # re-score an existing run
 ```
 
 The output folder gets these files:
@@ -39,3 +44,6 @@ The output folder gets these files:
 
 - **SD3.5 Medium and the ControlNet:** Stability AI Community License.
 - **This code:** MIT.
+- **Sample data:**
+  - NAIP imagery: USDA Farm Service Agency, public domain (via Microsoft Planetary Computer).
+  - HyTES and MASTER thermal data: NASA JPL / NASA Ames, distributed by NASA DAACs under the NASA Earth Science open data policy. Please cite the HyTES L1 and MASTER L1B products as their DAAC pages ask.

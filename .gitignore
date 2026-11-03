@@ -5,6 +5,7 @@ runs/
 eo2ir_runs*/
 pairs/
 *.png
+!samples/**/*.png
 *.jpg
 *.tif
 *.safetensors

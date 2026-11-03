@@ -14,7 +14,7 @@ import cv2
 import numpy as np
 from PIL import Image
 
-PAIRS_ROOT = Path(os.environ.get("EO2IR_PAIRS", "pairs"))
+PAIRS_ROOT = Path(os.environ.get("EO2IR_PAIRS", Path(__file__).resolve().parents[1] / "samples"))
 BASE_MODEL = "stabilityai/stable-diffusion-3.5-medium"
 CANNY_CONTROLNET = "tensorart/SD3.5M-Controlnet-Canny"
 
@@ -50,11 +50,12 @@ def pick_pairs(n: int, split: str = "test", seed: int = 0) -> list[dict]:
     out = []
     for tod, want in (("day", n // 2), ("night", n - n // 2)):
         keys = sorted(k for k in by_map if by_map[k][0]["time_of_day"] == tod)
+        left = {k: rng.sample(by_map[k], len(by_map[k])) for k in keys}  # each pair at most once
         got = []
-        while len(got) < want:
+        while len(got) < want and any(left.values()):
             for k in keys:
-                if len(got) < want:
-                    got.append(rng.choice(by_map[k]))
+                if len(got) < want and left[k]:
+                    got.append(left[k].pop())
         out += got
     return sorted(out, key=lambda r: (r["time_of_day"], r["map_key"], r["id"]))
 

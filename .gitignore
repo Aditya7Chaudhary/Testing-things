@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv*/
+runs/
+eo2ir_runs*/
+pairs/
+*.png
+*.jpg
+*.tif
+*.safetensors
+*.log
